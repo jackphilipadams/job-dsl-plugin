@@ -8,7 +8,7 @@ import javaposse.jobdsl.dsl.Preconditions
 
 @ContextType('hudson.plugins.parameterizedtrigger.AbstractBuildParameterFactory')
 class DownstreamTriggerParameterFactoryContext extends AbstractExtensibleContext {
-    private static final Set<String> VALID_NO_FIILES_FOUND_ACTIONS = ['SKIP', 'NOPARMS', 'FAIL']
+    private static final Set<String> VALID_NO_FILES_FOUND_ACTIONS = ['SKIP', 'NOPARMS', 'FAIL']
 
     List<Node> configFactories = []
 
@@ -29,12 +29,29 @@ class DownstreamTriggerParameterFactoryContext extends AbstractExtensibleContext
      */
     void forMatchingFiles(String filePattern, String parameterName, String noFilesFoundAction = 'SKIP') {
         Preconditions.checkArgument(
-                VALID_NO_FIILES_FOUND_ACTIONS.contains(noFilesFoundAction),
-                "noFilesFoundAction must be one of ${VALID_NO_FIILES_FOUND_ACTIONS.join(', ')}"
+                VALID_NO_FILES_FOUND_ACTIONS.contains(noFilesFoundAction),
+                "noFilesFoundAction must be one of ${VALID_NO_FILES_FOUND_ACTIONS.join(', ')}"
         )
 
         configFactories << new NodeBuilder().'hudson.plugins.parameterizedtrigger.BinaryFileParameterFactory' {
             delegate.parameterName(parameterName)
+            delegate.filePattern(filePattern)
+            delegate.noFilesFoundAction(noFilesFoundAction)
+        }
+    }
+    /**
+     * Looks for property files that match the specified pattern in the current workspace and trigger a build of
+     * the specified project(s) by for each property file, passing the property file as parameters to the job.
+     *
+     * The {@code noFilesFoundAction} must be one of {@code 'SKIP'}, {@code 'NOPARMS'} or {@code 'FAIL'}.
+     */
+    void forPropertyFiles(String filePattern, String noFilesFoundAction = 'SKIP') {
+        Preconditions.checkArgument(
+                VALID_NO_FILES_FOUND_ACTIONS.contains(noFilesFoundAction),
+                "noFilesFoundAction must be one of ${VALID_NO_FILES_FOUND_ACTIONS.join(', ')}"
+        )
+
+        configFactories << new NodeBuilder().'hudson.plugins.parameterizedtrigger.BinaryFileParameterFactory' {
             delegate.filePattern(filePattern)
             delegate.noFilesFoundAction(noFilesFoundAction)
         }
